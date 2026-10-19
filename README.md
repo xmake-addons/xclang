@@ -1,65 +1,76 @@
 # xclang
 
-An Xmake addon providing the `xclang` standalone toolchain.
-It uses [Xclang](https://github.com/clice-io/xclang), including its target configurations,
-bundled sysroots and runtime libraries. Requires Xmake 3.1.1 or later with addon support.
+An Xmake addon for [Xclang](https://github.com/clice-io/xclang), a Clang distribution
+with target configurations, bundled sysroots and runtime libraries.
+Requires Xmake 3.1.1 or later with addon support.
 
-## Install
+## Use the SDK package
 
-Until a release is tagged, install the Git branch after the recipe is available in your
-configured package repository:
-
-```sh
-xmake addon --install "xclang main"
-```
-
-Or install the working copy:
-
-```sh
-xmake addon --install .
-```
-
-Then select the addon toolchain in your project:
+The addon distributes the toolchain definition. The SDK package is provided by xmake-repo:
 
 ```lua
-add_addons("xclang")
-set_toolchains("@addon/xclang/xclang")
-set_languages("c11", "c++20")
+add_addons("xclang 1.0.2")
+add_requires("xclang 23.1.2+10", {system = false})
+set_languages("c++20")
 
 target("hello")
     set_kind("binary")
+    set_toolchains("@addon/xclang/xclang", {packages = "xclang"})
     add_files("src/main.cpp")
 ```
 
-Use an existing Xclang distribution:
+```sh
+xmake -y
+```
+
+Xmake installs the addon first, then installs the SDK package. The `packages` option
+binds the SDK to the addon toolchain, which locates its tools in the package's installation
+directory. No manual addon installation, SDK path or PATH change is required.
+
+The addon and SDK are both named `xclang`, but are resolved from `addons/` and `packages/`
+respectively. Installing the addon alone does not download the SDK.
+Omit either version constraint to use the latest version available from the repository.
+
+For cross compilation, select the target platform and architecture as usual:
 
 ```sh
-xmake f -p linux -a x86_64 --sdk=/path/to/xclang
+xmake f -p linux -a arm64 -y
+xmake -y
+```
+
+The SDK package is selected for the host running the compiler; the toolchain selects
+the requested target's `.cfg` file. See [examples/hello](examples/hello) for a runnable project.
+
+## Use an existing SDK
+
+Select the toolchain directly when supplying your own SDK:
+
+```lua
+add_addons("xclang")
+set_languages("c++20")
+
+target("hello")
+    set_kind("binary")
+    set_toolchains("@addon/xclang/xclang")
+    add_files("src/main.cpp")
+```
+
+```sh
+xmake f -p linux -a x86_64 --sdk=/path/to/xclang -y
 xmake
 ```
 
 Alternatively, pass `--bin=/path/to/xclang/bin` or put its `bin` directory on `PATH`.
 An explicit SDK/bindir is checked in isolation and does not fall back to another LLVM.
-The selected distribution must contain `xclang`, `clang`, and the target's `.cfg` file.
+The distribution must contain `xclang`, `clang`, and the target's `.cfg` file.
 
-## Download the SDK as a package
+## Local development
 
-The `xclang` SDK package is defined in xmake-repo. Declare it and associate it with the
-addon toolchain:
+To use the working copy instead of downloading the addon:
 
-```lua
-add_addons("xclang")
-add_requires("xclang 23.1.2+10")
-set_toolchains("@addon/xclang/xclang", {packages = "xclang"})
-set_languages("c++20")
-
-target("hello")
-    set_kind("binary")
-    add_files("src/main.cpp")
+```sh
+xmake addon --install .
 ```
-
-`xmake f -p linux -a arm64 -y` downloads the host SDK
-and selects its Linux ARM64 target. Installing the addon alone does not download the SDK.
 
 ## Targets
 
@@ -81,15 +92,17 @@ the selected distribution; runtime defaults match the original toolchain impleme
 xmake lua tests/test.lua
 ```
 
-This installs the working copy and tests namespaced addon resolution, target selection,
-absolute tool paths, PATH discovery without `which`/`where`, and explicit-SDK isolation.
-Discovery fixtures do not require a compiler. Set `XCLANG_SDK` or put `xclang` on `PATH`
-to additionally check an actual distribution and build the C/C++/shared-library smoke project
-for Linux, MinGW and macOS on both architectures. Compatible host binaries are also run.
-Other target builds are not executed. No SDK is downloaded by the tests.
+The runner isolates addon registration and caches in temporary directories. It checks
+addon resolution, package binding, target selection, absolute tool paths,
+PATH discovery without `which`/`where`, and explicit-SDK isolation.
+A first-install test uses a local repository and a simulated SDK to verify automatic addon
+installation, SDK package installation and toolchain binding without network access.
+It does not compile with the simulated SDK.
 
-The runner isolates addon registration and caches in a temporary `XMAKE_GLOBALDIR`.
-`XCLANG_SDK` is used by the test runner; normal project configuration uses `--sdk` or `--bin`.
+Set `XCLANG_SDK` or put `xclang` on PATH to additionally check a real distribution and build
+the C/C++/shared-library smoke project for Linux, MinGW and macOS on both architectures.
+Compatible host binaries are also run. Tests do not download a real SDK.
+`XCLANG_SDK` is used by the test runner; normal configuration uses `--sdk` or `--bin`.
 
 ## License
 
