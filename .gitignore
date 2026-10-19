@@ -1,0 +1,4 @@
+build/
+.xmake/
+xmake-addons.lock
+.DS_Store

@@ -1,0 +1,5 @@
+addon("xlang")
+    set_homepage("https://github.com/clice-io/xclang")
+    set_description("Xclang cross-toolchain support for Xmake")
+    set_license("Apache-2.0")
+    set_sourcedir("src")
