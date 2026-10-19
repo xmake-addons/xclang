@@ -43,7 +43,7 @@ function _fixture(callback)
 end
 
 function _load(opt)
-    return toolchain.load("@addon/xlang/xclang", opt)
+    return toolchain.load("@addon/xclang/xclang", opt)
 end
 
 function test_target_config_selection()
@@ -142,7 +142,7 @@ function test_build()
     for _, target in ipairs({{"mingw", "x86_64"}, {"mingw", "arm64"}, {"linux", "x86_64"}, {"linux", "arm64"},
                              {"macosx", "x86_64"}, {"macosx", "arm64"}}) do
         os.vrunv(os.programfile(), {"f", "-P", projectdir, "-c", "-y", "-p", target[1], "-a", target[2],
-                                  "--toolchain=@addon/xlang/xclang", "--sdk=" .. sdkdir}, {curdir = projectdir})
+                                  "--toolchain=@addon/xclang/xclang", "--sdk=" .. sdkdir}, {curdir = projectdir})
         os.vrunv(os.programfile(), {"-P", projectdir, "-r"}, {curdir = projectdir})
         if (is_host("windows") and target[1] == "mingw") or (is_host("linux") and target[1] == "linux") or
            (is_host("macosx") and target[1] == "macosx") then
@@ -158,9 +158,9 @@ end
 function test_package_declaration()
     _fixture(function (fixture, root)
         fixture:write("package-project/xmake.lua", [[
-add_addons("xlang")
+add_addons("xclang")
 add_requires("xclang 23.1.2+10")
-set_toolchains("@addon/xlang/xclang", {packages = "xclang"})
+set_toolchains("@addon/xclang/xclang", {packages = "xclang"})
 ]])
         local script = 'import("core.project.project"); assert(table.contains(table.wrap(project.requires_str()), "xclang 23.1.2+10"))'
         os.vrunv(os.programfile(), {"lua", "-c", script}, {curdir = path.join(root, "package-project")})
@@ -173,7 +173,7 @@ end
 
 function main(...)
     if not table.contains({...}, "--installed") then
-        local testdir = os.tmpfile() .. "-xlang"
+        local testdir = os.tmpfile() .. "-xclang"
         local envs = {XMAKE_GLOBALDIR = testdir}
         local errors
         try {
@@ -189,12 +189,12 @@ function main(...)
         end
         return
     end
-    local installed = addon.resolve_reference("@addon/xlang/xclang", "/", "toolchains")
+    local installed = addon.resolve_reference("@addon/xclang/xclang", "/", "toolchains")
     assert(os.isfile(path.join(installed.dir, installed.name, "xmake.lua")))
     test_package_declaration()
     test_target_config_selection()
     test_explicit_sdk_isolation()
     test_installed_distribution()
     test_build()
-    print("xlang addon tests passed")
+    print("xclang addon tests passed")
 end

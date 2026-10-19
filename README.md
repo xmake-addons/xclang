@@ -1,4 +1,4 @@
-# xlang
+# xclang
 
 An Xmake addon providing the `xclang` standalone toolchain.
 It uses [Xclang](https://github.com/clice-io/xclang), including its target configurations,
@@ -10,7 +10,7 @@ Until a release is tagged, install the Git branch after the recipe is available 
 configured package repository:
 
 ```sh
-xmake addon --install "xlang main"
+xmake addon --install "xclang main"
 ```
 
 Or install the working copy:
@@ -22,8 +22,8 @@ xmake addon --install .
 Then select the addon toolchain in your project:
 
 ```lua
-add_addons("xlang")
-set_toolchains("@addon/xlang/xclang")
+add_addons("xclang")
+set_toolchains("@addon/xclang/xclang")
 set_languages("c11", "c++20")
 
 target("hello")
@@ -48,9 +48,9 @@ The `xclang` SDK package is defined in xmake-repo. Declare it and associate it w
 addon toolchain:
 
 ```lua
-add_addons("xlang")
+add_addons("xclang")
 add_requires("xclang 23.1.2+10")
-set_toolchains("@addon/xlang/xclang", {packages = "xclang"})
+set_toolchains("@addon/xclang/xclang", {packages = "xclang"})
 set_languages("c++20")
 
 target("hello")

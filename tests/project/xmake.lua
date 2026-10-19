@@ -1,5 +1,5 @@
-add_addons("xlang")
-set_toolchains("@addon/xlang/xclang")
+add_addons("xclang")
+set_toolchains("@addon/xclang/xclang")
 
 set_languages("c11", "c++20")
 add_rules("mode.debug", "mode.release")
