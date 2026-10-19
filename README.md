@@ -6,7 +6,14 @@ bundled sysroots and runtime libraries. Requires Xmake 3.1.1 or later with addon
 
 ## Install
 
-From this checkout:
+Until a release is tagged, install the Git branch after the recipe is available in your
+configured package repository:
+
+```sh
+xmake addon --install "xlang main"
+```
+
+Or install the working copy:
 
 ```sh
 xmake addon --install .
@@ -37,12 +44,11 @@ The selected distribution must contain `xclang`, `clang`, and the target's `.cfg
 
 ## Download the SDK as a package
 
-The addon also ships an optional Xclang package definition. Include it before declaring
-the package, then associate that package with the toolchain:
+The `xclang` SDK package is defined in xmake-repo. Declare it and associate it with the
+addon toolchain:
 
 ```lua
 add_addons("xlang")
-includes("@addon/xlang/packages")
 add_requires("xclang 23.1.2+10")
 set_toolchains("@addon/xlang/xclang", {packages = "xclang"})
 set_languages("c++20")
@@ -52,9 +58,8 @@ target("hello")
     add_files("src/main.cpp")
 ```
 
-After installing this addon locally, `xmake f -p linux -a arm64 -y` downloads the host SDK
+`xmake f -p linux -a arm64 -y` downloads the host SDK
 and selects its Linux ARM64 target. Installing the addon alone does not download the SDK.
-The package recipe retains the upstream release hashes from xmake-repo.
 
 ## Targets
 

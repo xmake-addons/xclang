@@ -159,7 +159,6 @@ function test_package_declaration()
     _fixture(function (fixture, root)
         fixture:write("package-project/xmake.lua", [[
 add_addons("xlang")
-includes("@addon/xlang/packages")
 add_requires("xclang 23.1.2+10")
 set_toolchains("@addon/xlang/xclang", {packages = "xclang"})
 ]])
