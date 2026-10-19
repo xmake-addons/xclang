@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            plat: linux
+          - os: macos-latest
+            plat: macosx
+          - os: windows-latest
+            plat: mingw
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}
+      cancel-in-progress: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: branch@dev
+
+      - name: Update package repositories
+        run: xrepo update-repo
+
+      - name: Run regression tests
+        run: xmake lua -vD tests/test.lua
+
+      - name: Install working-copy addon
+        run: xmake addon --install -y .
+
+      - name: Configure example and install SDK
+        working-directory: examples/hello
+        run: xmake f -c -y -m debug -p ${{ matrix.plat }}
+
+      - name: Build example
+        working-directory: examples/hello
+        run: xmake -y
+
+      - name: Run example
+        working-directory: examples/hello
+        run: xmake run hello
