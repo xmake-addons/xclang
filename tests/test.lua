@@ -2,6 +2,9 @@ import("core.tool.toolchain")
 import("core.package.addon")
 import("lib.detect.find_tool")
 
+-- Package installation runs in a different working directory.
+local scriptdir = path.absolute(os.scriptdir())
+
 -- A renamed xmake supplies a working --version command without requiring xclang.
 -- The clang marker is never executed by these discovery tests.
 function _fixture(callback)
@@ -138,7 +141,7 @@ function test_build()
     if not sdkdir then
         return print("Set XCLANG_SDK or put xclang on PATH to build with a real distribution")
     end
-    local projectdir = path.join(os.scriptdir(), "project")
+    local projectdir = path.join(scriptdir, "project")
     for _, target in ipairs({{"mingw", "x86_64"}, {"mingw", "arm64"}, {"linux", "x86_64"}, {"linux", "arm64"},
                              {"macosx", "x86_64"}, {"macosx", "arm64"}}) do
         os.vrunv(os.programfile(), {"f", "-P", projectdir, "-c", "-y", "-p", target[1], "-a", target[2],
@@ -180,7 +183,7 @@ function test_automatic_setup()
         local sdkdir = fixture:sdk("sdk", "x86_64-w64-windows-gnu")
         local projectdir = path.join(root, "project")
         local repodir = path.join(root, "repo")
-        local addonroot = path.directory(os.scriptdir())
+        local addonroot = path.directory(scriptdir)
         fixture:write("repo/addons/x/xclang/xmake.lua", string.format([[
 package("xclang")
     set_kind("addon")
@@ -231,8 +234,8 @@ function main(...)
         local errors
         try {
             function ()
-                os.vrunv(os.programfile(), {"addon", "--install", "-y", path.directory(os.scriptdir())}, {envs = envs})
-                os.vrunv(os.programfile(), {"lua", path.join(os.scriptdir(), "test.lua"), "--installed"}, {envs = envs})
+                os.vrunv(os.programfile(), {"addon", "--install", "-y", path.directory(scriptdir)}, {envs = envs})
+                os.vrunv(os.programfile(), {"lua", path.join(scriptdir, "test.lua"), "--installed"}, {envs = envs})
             end,
             catch {function (message) errors = message end}
         }
