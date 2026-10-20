@@ -174,7 +174,7 @@ local target = assert(project.target("probe"))
 assert(table.contains(table.wrap(target:get("toolchains")), "@addon/xclang/xclang"), "missing addon toolchain")
 assert(target:extraconf("toolchains", "@addon/xclang/xclang", "packages") == "xclang", "missing package binding")
 ]]
-        os.vrunv(os.programfile(), {"lua", "-c", script}, {curdir = path.join(root, "package-project")})
+        os.vrunv(os.programfile(), {"lua", "-D", "-c", script}, {curdir = path.join(root, "package-project")})
     end)
 end
 
@@ -207,17 +207,24 @@ target("probe")
     set_kind("phony")
     set_toolchains("@addon/xclang/xclang", {packages = "xclang"})
     on_config(function (target)
-        local toolchain = assert(target:toolchain("xclang"))
-        assert(toolchain:check())
+        local toolchain = assert(target:toolchain("xclang"), "xclang toolchain is not bound to the target")
+        assert(toolchain:check(), "packaged xclang toolchain was not found")
         local packages = toolchain:packages()
-        assert(#packages == 1 and packages[1]:name() == "xclang")
-        assert(path.normalize(toolchain:bindir()) == path.normalize(path.join(packages[1]:installdir(), "bin")))
+        assert(#packages == 1 and packages[1]:name() == "xclang", "expected the xclang SDK package")
+        local actual = path.normalize(toolchain:bindir())
+        local expected = path.normalize(path.join(packages[1]:installdir(), "bin"))
+        -- Windows program discovery returns lowercase paths.
+        if is_host("windows") then
+            actual = actual:lower()
+            expected = expected:lower()
+        end
+        assert(actual == expected, "SDK bindir mismatch: expected %%s, got %%s", expected, actual)
         io.writefile(path.join(os.projectdir(), "configured.txt"), "ok")
     end)
 ]], repodir))
         local opt = {curdir = projectdir, envs = {XMAKE_GLOBALDIR = path.join(root, "global")}}
         os.vrunv(os.programfile(), {"g", "--network=private"}, opt)
-        os.vrunv(os.programfile(), {"f", "-y", "-p", "mingw", "-a", "x86_64"}, opt)
+        os.vrunv(os.programfile(), {"f", "-D", "-y", "-p", "mingw", "-a", "x86_64"}, opt)
         _are_equal(io.readfile(path.join(projectdir, "configured.txt")), "ok")
         assert(io.load(path.join(projectdir, "xmake-addons.lock"))["xclang"])
     end)
@@ -235,7 +242,7 @@ function main(...)
         try {
             function ()
                 os.vrunv(os.programfile(), {"addon", "--install", "-y", path.directory(scriptdir)}, {envs = envs})
-                os.vrunv(os.programfile(), {"lua", path.join(scriptdir, "test.lua"), "--installed"}, {envs = envs})
+                os.vrunv(os.programfile(), {"lua", "-D", path.join(scriptdir, "test.lua"), "--installed"}, {envs = envs})
             end,
             catch {function (message) errors = message end}
         }
